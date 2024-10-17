@@ -31,6 +31,7 @@ def http_trigger1(req: func.HttpRequest) -> func.HttpResponse:
 
     # Validate print areas format
     valid_format = True
+    range_pattern = r'^[A-Z]+\d+:[A-Z]+\d+$'
     for item in print_areas:
         if not isinstance(item, dict) or 'sheet_name' not in item or 'print_area' not in item:
             valid_format = False
@@ -39,9 +40,13 @@ def http_trigger1(req: func.HttpRequest) -> func.HttpResponse:
         if item['sheet_name'] is None or item['print_area'] is None:
             valid_format = False
             break
-        # Check if print_area is in a valid Excel range format (e.g., A1:G66)
-        if not re.match(r'^[A-Z]+\d+:[A-Z]+\d+$', item['print_area']):
-            valid_format = False
+        # Check if print_area is in a valid Excel range format (e.g., A1:G66 or A1:E36,A37:E53)
+        ranges = item['print_area'].split(',')
+        for r in ranges:
+            if not re.match(range_pattern, r.strip()):
+                valid_format = False
+                break
+        if not valid_format:
             break
 
     if not valid_format:
