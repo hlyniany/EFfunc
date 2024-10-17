@@ -31,6 +31,10 @@ def http_trigger1(req: func.HttpRequest) -> func.HttpResponse:
         if not isinstance(item, dict) or 'sheet_name' not in item or 'print_area' not in item:
             valid_format = False
             break
+        # Check for None values
+        if item['sheet_name'] is None or item['print_area'] is None:
+            valid_format = False
+            break
         # Check if print_area is in a valid Excel range format (e.g., A1:G66)
         if not re.match(r'^[A-Z]+\d+:[A-Z]+\d+$', item['print_area']):
             valid_format = False
