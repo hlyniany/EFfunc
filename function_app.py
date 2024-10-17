@@ -25,6 +25,10 @@ def http_trigger1(req: func.HttpRequest) -> func.HttpResponse:
     except json.JSONDecodeError:
         return func.HttpResponse("Invalid print_areas JSON", status_code=400)
 
+    # Check if print_areas is empty
+    if not print_areas:
+        return func.HttpResponse("print_areas cannot be empty", status_code=400)
+
     # Validate print areas format
     valid_format = True
     for item in print_areas:
