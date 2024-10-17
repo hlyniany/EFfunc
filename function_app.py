@@ -3,6 +3,7 @@ import logging
 import openpyxl
 from io import BytesIO
 import json
+import base64
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
@@ -16,12 +17,12 @@ def http_trigger1(req: func.HttpRequest) -> func.HttpResponse:
 
     file = req.files['file']
 
-    # Error handling for x and y parameters
+    # Get print areas from form data
+    print_areas_json = req.form.get('print_areas', '[]')
     try:
-        x = int(req.form.get('x', 1))
-        y = int(req.form.get('y', 1))
-    except ValueError:
-        return func.HttpResponse("Invalid x or y parameter", status_code=400)
+        print_areas = json.loads(print_areas_json)
+    except json.JSONDecodeError:
+        return func.HttpResponse("Invalid print_areas JSON", status_code=400)
 
     # Load workbook
     workbook = openpyxl.load_workbook(BytesIO(file.read()))
@@ -29,19 +30,28 @@ def http_trigger1(req: func.HttpRequest) -> func.HttpResponse:
     # Prepare a dictionary to hold print area information
     print_areas_info = {}
 
-    # Process each worksheet
-    for sheet in workbook.worksheets:
-        sheet.print_area = f'A1:{openpyxl.utils.get_column_letter(y)}{x}'
-        print_areas_info[sheet.title] = sheet.print_area
+    # Process each worksheet based on provided print areas
+    for item in print_areas:
+        sheet_name = item.get('sheet_name')
+        print_area = item.get('print_area')
+        if sheet_name in workbook.sheetnames:
+            sheet = workbook[sheet_name]
+            sheet.print_area = print_area
+            print_areas_info[sheet_name] = print_area
+        else:
+            logging.warning(f"Sheet {sheet_name} not found in workbook.")
 
     # Save the modified workbook
     output = BytesIO()
     workbook.save(output)
     output.seek(0)
 
+    # Encode the binary data to Base64
+    encoded_file = base64.b64encode(output.getvalue()).decode('utf-8')
+
     # Create a JSON response
     response_data = {
-        "file": output.getvalue().decode('latin1'),  # Encode binary data to a string
+        "file": encoded_file,  # Base64 encoded binary data
         "print_areas": print_areas_info
     }
 
