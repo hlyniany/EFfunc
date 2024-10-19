@@ -71,6 +71,12 @@ def http_trigger1(req: func.HttpRequest) -> func.HttpResponse:
                 sheet.print_area = print_area
                 sheet.page_setup.orientation = sheet.ORIENTATION_PORTRAIT  # Set orientation to portrait
                 sheet.page_setup.paperSize = sheet.PAPERSIZE_A4
+                sheet.page_breaks = [] 
+                sheet.page_setup.fitToWidth = 1  # Fit content to one page width
+                sheet.page_setup.fitToHeight = 0  # No limit on height (0 means as many pages as needed)
+                sheet.page_setup.scale = 100
+                sheet.sheet_properties.pageSetUpPr.fitToPage = True
+                #sheet.sheet_properties.pageSetUpPr.autoPageBreaks = False
                 print_areas_info[sheet_name] = print_area
                 logging.info(f"Set print area for {sheet_name}: {print_area} and orientation to portrait")
             else:
