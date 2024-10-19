@@ -40,6 +40,9 @@ def http_trigger1(req: func.HttpRequest) -> func.HttpResponse:
         if item['sheet_name'] is None or item['print_area'] is None:
             valid_format = False
             break
+        # Allow 'skip' as a valid print_area value
+        if item['print_area'] == 'skip':
+            continue
         # Check if print_area is in a valid Excel range format (e.g., A1:G66 or A1:E36,A37:E53)
         ranges = item['print_area'].split(',')
         for r in ranges:
@@ -64,9 +67,14 @@ def http_trigger1(req: func.HttpRequest) -> func.HttpResponse:
         print_area = item.get('print_area')
         if sheet_name in workbook.sheetnames:
             sheet = workbook[sheet_name]
-            sheet.print_area = print_area
-            print_areas_info[sheet_name] = print_area
-            logging.info(f"Set print area for {sheet_name}: {print_area}")
+            if print_area != 'skip':
+                sheet.print_area = print_area
+                sheet.page_setup.orientation = sheet.ORIENTATION_PORTRAIT  # Set orientation to portrait
+                sheet.page_setup.paperSize = sheet.PAPERSIZE_A4
+                print_areas_info[sheet_name] = print_area
+                logging.info(f"Set print area for {sheet_name}: {print_area} and orientation to portrait")
+            else:
+                logging.info(f"Skipped setting print area for {sheet_name}")
         else:
             logging.warning(f"Sheet {sheet_name} not found in workbook.")
 
