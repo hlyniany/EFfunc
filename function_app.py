@@ -17,6 +17,7 @@ def http_trigger1(req: func.HttpRequest) -> func.HttpResponse:
         return func.HttpResponse("No file received", status_code=400)
 
     file = req.files['file']
+    input_filename = file.filename  # Get the original file name
 
     # Get print areas from form data
     print_areas_json = req.form.get('print_areas', '[]')
@@ -99,7 +100,7 @@ def http_trigger1(req: func.HttpRequest) -> func.HttpResponse:
         output.getvalue(),  # Return the binary content of the Excel file
         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         headers={
-            'Content-Disposition': 'attachment; filename=updated_file.xlsx',
+            'Content-Disposition': f'attachment; filename="{input_filename}"',
             'X-Print-Areas': json.dumps(response_data)  # Include print areas info in a custom header
         }
     )
