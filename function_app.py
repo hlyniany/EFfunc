@@ -69,7 +69,6 @@ def http_trigger1(req: func.HttpRequest) -> func.HttpResponse:
         if sheet_name in workbook.sheetnames:
             sheet = workbook[sheet_name]
             if print_area != 'skip':
-                sheet.print_area = print_area
                 sheet.page_setup.orientation = sheet.ORIENTATION_PORTRAIT  # Set orientation to portrait
                 sheet.page_setup.paperSize = sheet.PAPERSIZE_A4
                 sheet.page_breaks = [] 
@@ -79,6 +78,7 @@ def http_trigger1(req: func.HttpRequest) -> func.HttpResponse:
                 sheet.sheet_properties.pageSetUpPr.fitToPage = True
                 #sheet.sheet_properties.pageSetUpPr.autoPageBreaks = False
                 print_areas_info[sheet_name] = print_area
+                sheet.print_area = print_area
                 logging.info(f"Set print area for {sheet_name}: {print_area} and orientation to portrait")
             else:
                 logging.info(f"Skipped setting print area for {sheet_name}")
