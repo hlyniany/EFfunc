@@ -58,7 +58,7 @@ def http_trigger1(req: func.HttpRequest) -> func.HttpResponse:
 
     # Load workbook
     workbook = openpyxl.load_workbook(BytesIO(file.read()))
-
+    logging.info(f"openpyxl {openpyxl.__version__}")
     # Prepare a dictionary to hold print area information
     print_areas_info = {}
 
@@ -71,14 +71,26 @@ def http_trigger1(req: func.HttpRequest) -> func.HttpResponse:
             if print_area != 'skip':
                 sheet.page_setup.orientation = sheet.ORIENTATION_PORTRAIT  # Set orientation to portrait
                 sheet.page_setup.paperSize = sheet.PAPERSIZE_A4
-                sheet.page_breaks = [] 
+                
+                # Clear existing page breaks
+                sheet.row_breaks = openpyxl.worksheet.pagebreak.RowBreak()
+                
+                # Add a page break at the end of each range
+                ranges = print_area.split(',')
+                for r in ranges:
+                    start_cell, end_cell = r.split(':')
+                    end_row = int(end_cell[1:])
+                    sheet.row_breaks.append(openpyxl.worksheet.pagebreak.Break(id=end_row))
+                
                 sheet.page_setup.fitToWidth = 1  # Fit content to one page width
                 sheet.page_setup.fitToHeight = 0  # No limit on height (0 means as many pages as needed)
                 sheet.page_setup.scale = 100
                 sheet.sheet_properties.pageSetUpPr.fitToPage = True
-                #sheet.sheet_properties.pageSetUpPr.autoPageBreaks = False
+                
+                # Keep the print area information
                 print_areas_info[sheet_name] = print_area
                 sheet.print_area = print_area
+                
                 logging.info(f"Set print area for {sheet_name}: {print_area} and orientation to portrait")
             else:
                 logging.info(f"Skipped setting print area for {sheet_name}")
